@@ -1,4 +1,6 @@
 #include <WiFi.h>
+#include <esp_wifi.h>   // <- dazu!
+#include <esp_wpa2.h>   // <- sehr wichtig für WPA2-Enterprise Funktionen
 
 const char* ssid = "DeinWLANName";
 const char* username = "dein_username";
