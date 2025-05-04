@@ -1,54 +1,54 @@
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 
-const char* ssid = "YOUR SSID HERE";
-const char* password = "YOUR PASSWORD HERE";
+// WLAN-Zugangsdaten
+const char* ssid = "...";
+const char* password = "...";
+
+// Ziel-URL
+const char* url = "https://www.dummyjson.com/users/1";
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
+
+  // WLAN verbinden
   WiFi.begin(ssid, password);
-  Serial.println("Connecting");
-  while(WiFi.status() != WL_CONNECTED) {
+  Serial.print("Verbinde mit WLAN");
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println("\nWLAN verbunden!");
+  Serial.print("IP-Adresse: ");
   Serial.println(WiFi.localIP());
 }
 
 void loop() {
-  if(WiFi.status()== WL_CONNECTED){
-    String response = httpGETRequest("http://worldtimeapi.org/api/timezone/Europe/London.txt");
-    Serial.print(response);
-    delay(5000);
-  }
-}
+  if (WiFi.status() == WL_CONNECTED) {
+    WiFiClientSecure client;
+    client.setInsecure();  // Zertifikatsprüfung abschalten (unsicher, nur zu Testzwecken)
 
-/* https://randomnerdtutorials.com/esp32-http-get-open-weather-map-thingspeak-arduino/ */
-String httpGETRequest(const char* serverName) {
-  WiFiClient client;
-  HTTPClient http;
-    
-  // Your Domain name with URL path or IP address with path
-  http.begin(client, serverName);
-  
-  // Send HTTP POST request
-  int httpResponseCode = http.GET();
-  
-  String payload = "{}"; 
-  
-  if (httpResponseCode>0) {
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode);
-    payload = http.getString();
-  }
-  else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
-  }
-  // Free resources
-  http.end();
+    HTTPClient https;
 
-  return payload;
+    Serial.println("[HTTPS] Anfrage senden...");
+    https.begin(client, url);  // HTTPS-Verbindung mit unsicherem Client
+    int httpCode = https.GET();
+
+    if (httpCode > 0) {
+      Serial.printf("[HTTPS] Antwortcode: %d\n", httpCode);
+      String payload = https.getString();
+      Serial.println("Antwort:");
+      Serial.println(payload);
+    } else {
+      Serial.printf("[HTTPS] Fehler bei GET: %d\n", httpCode);
+    }
+
+    https.end();
+  } else {
+    Serial.println("Keine WLAN-Verbindung.");
+  }
+
+  delay(10000);  // Alle 10 Sekunden neue Anfrage
 }
